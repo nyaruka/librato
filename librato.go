@@ -3,6 +3,8 @@ package librato
 import (
 	"bytes"
 	"encoding/json"
+	"io"
+	"io/ioutil"
 	"net/http"
 	"strings"
 	"sync"
@@ -132,8 +134,18 @@ func (c *collector) flush(count int) {
 	req.SetBasicAuth(c.username, c.token)
 	req.Header.Set("Content-Type", "application/json")
 
-	if _, err := c.httpClient.Do(req); err != nil {
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
 		logrus.WithField("comp", "librato").WithError(err).Error("error sending librato metrics")
+		return
+	}
+	// read our entire body and always close so we reuse connections
+	defer resp.Body.Close()
+	io.Copy(ioutil.Discard, resp.Body)
+
+	// non 200 or 201 are errors
+	if resp.StatusCode != 200 && resp.StatusCode != 201 {
+		logrus.WithField("comp", "librato").WithField("status_code", resp.StatusCode).Error("non 200 returned when posting librato metrics")
 		return
 	}
 
