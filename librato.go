@@ -4,13 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
-	"io/ioutil"
+	"log/slog"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/sirupsen/logrus"
 )
 
 // The endpoint we post librato to
@@ -66,14 +64,14 @@ func (c *collector) Start() {
 		c.waitGroup.Add(1)
 		defer c.waitGroup.Done()
 
-		logrus.WithField("comp", "librato").Info("started for username ", c.username)
+		slog.Info("started collector", "username", c.username, "comp", "librato")
 		for {
 			select {
 			case <-c.stop:
 				for len(c.buffer) > 0 {
 					c.flush(250)
 				}
-				logrus.WithField("comp", "librato").Info("stopped")
+				slog.Info("stopped", "comp", "librato")
 				return
 
 			case <-time.After(c.timeout):
@@ -89,7 +87,7 @@ func (c *collector) Start() {
 func (c *collector) Gauge(name string, value float64) {
 	// our buffer is full, log an error but continue
 	if len(c.buffer) >= cap(c.buffer) {
-		logrus.Error("unable to add new gauges, buffer full, you may want to increase your buffer size or decrease your timeout")
+		slog.Error("unable to add new gauges, buffer full, you may want to increase your buffer size or decrease your timeout")
 		return
 	}
 
@@ -126,7 +124,7 @@ func (c *collector) flush(count int) {
 	// send it off
 	encoded, err := json.Marshal(reqPayload)
 	if err != nil {
-		logrus.WithField("comp", "librato").WithError(err).Error("error encoding librato metrics")
+		slog.Error("error encoding librato metrics", "error", err, "comp", "librato")
 		return
 	}
 
@@ -136,18 +134,18 @@ func (c *collector) flush(count int) {
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		logrus.WithField("comp", "librato").WithError(err).Error("error sending librato metrics")
+		slog.Error("error sending librato metrics", "error", err, "comp", "librato")
 		return
 	}
 	// read our entire body and always close so we reuse connections
 	defer resp.Body.Close()
-	io.Copy(ioutil.Discard, resp.Body)
+	io.Copy(io.Discard, resp.Body)
 
 	// non 200 or 201 are errors
 	if resp.StatusCode != 200 && resp.StatusCode != 201 {
-		logrus.WithField("comp", "librato").WithField("status_code", resp.StatusCode).Error("non 200 returned when posting librato metrics")
+		slog.Error("non 200 returned when posting librato metrics", "comp", "librato", "status_code", resp.StatusCode)
 		return
 	}
 
-	logrus.WithField("comp", "librato").WithField("count", len(reqPayload.Gauges)).Debug("flushed to librato")
+	slog.Debug("flushed to librato", "comp", "librato", "count", len(reqPayload.Gauges))
 }
