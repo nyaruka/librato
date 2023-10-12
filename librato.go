@@ -60,8 +60,8 @@ func NewCollector(username string, token string, source string, timeout time.Dur
 
 // Start starts our librato sender, callers can use Stop to stop it
 func (c *collector) Start() {
+	c.waitGroup.Add(1)
 	go func() {
-		c.waitGroup.Add(1)
 		defer c.waitGroup.Done()
 
 		slog.Info("started collector", "username", c.username, "comp", "librato")
@@ -112,12 +112,13 @@ func (c *collector) flush(count int) {
 	}
 
 	// read up to our count of gauges
+readCounts:
 	for i := 0; i < count; i++ {
 		select {
 		case g := <-c.buffer:
 			reqPayload.Gauges = append(reqPayload.Gauges, g)
 		default:
-			break
+			break readCounts
 		}
 	}
 
