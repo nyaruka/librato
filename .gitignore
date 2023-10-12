@@ -1,5 +1,5 @@
-fabfile.*
-fabconfig.*
+fabfile.py
+deploy
 
 # Binaries for programs and plugins
 *.exe
