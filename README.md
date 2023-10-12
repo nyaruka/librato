@@ -1,4 +1,4 @@
-# Librato [![Build Status](https://travis-ci.org/nyaruka/librato.svg?branch=main)](https://travis-ci.org/nyaruka/librato) [![Coverage Status](https://coveralls.io/repos/github/nyaruka/librato/badge.svg?branch=main)](https://coveralls.io/github/nyaruka/librato?branch=main) [![Go Report Card](https://goreportcard.com/badge/github.com/nyaruka/librato)](https://goreportcard.com/report/github.com/nyaruka/librato)
+# librato [![Build Status](https://github.com/nyaruka/librato/workflows/CI/badge.svg)](https://github.com/nyaruka/librato/actions?query=workflow%3ACI) [![codecov](https://codecov.io/gh/nyaruka/librato/branch/main/graph/badge.svg)](https://codecov.io/gh/nyaruka/librato) [![Go Report Card](https://goreportcard.com/badge/github.com/nyaruka/librato)](https://goreportcard.com/report/github.com/nyaruka/librato)
 
 Basic Librato client library with batching of events. Thus far it only supports sending gauge values
 because that's all we need, but contributions welcome.
